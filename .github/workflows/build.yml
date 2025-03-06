@@ -1,4 +1,4 @@
-name: Build
+ name: Build
 on:
   push:
     branches:
@@ -39,12 +39,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Update projectBranch in build.gradle
-        run: |
-          # Replace the empty projectBranch with 'development'
-          sed -i 's/String projectBranch = \x27\x27/String projectBranch = \x27development\x27/' build.gradle
-          # Verify the change
-          grep "projectBranch" build.gradle
       - name: Generate build timestamp
         id: timestamp
         run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
