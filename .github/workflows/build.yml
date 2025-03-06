@@ -41,25 +41,21 @@ jobs:
           distribution: 'temurin'
       - name: Generate build timestamp
         id: timestamp
-        run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+        run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
       - name: Build with Maven
         run: mvn -B package
+      - name: Find JAR file
+        id: find_jar
+        run: |
+          JAR_PATH=$(find ./target -name "CoreProtect-*.jar" -not -name "*-shaded.jar" | head -n 1)
+          echo "jar_path=$JAR_PATH" >> $GITHUB_ENV
+          echo "jar_name=$(basename $JAR_PATH)" >> $GITHUB_ENV
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: nightly-${{ steps.timestamp.outputs.timestamp }}
-          release_name: Nightly Build ${{ steps.timestamp.outputs.timestamp }}
+          tag_name: nightly-${{ env.timestamp }}
+          name: Nightly Build ${{ env.timestamp }}
           draft: false
           prerelease: true
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/*.jar
-          asset_name: application-nightly-${{ steps.timestamp.outputs.timestamp }}.jar
-          asset_content_type: application/java-archive
+          files: ${{ env.jar_path }}
+          token: ${{ secrets.GITHUB_TOKEN }}
